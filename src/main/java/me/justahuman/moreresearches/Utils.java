@@ -112,6 +112,26 @@ public class Utils {
         research.addItems(items);
     }
 
+    public static List<String> compressIds(List<String> words) {
+        int totalWords = words.size();
+        int numGroups = (int) Math.ceil(Math.sqrt(totalWords));
+        int targetGroupSize = (int) Math.ceil((double) totalWords / numGroups);
+
+        List<String> compressedWords = new ArrayList<>();
+        StringBuilder currentGroup = new StringBuilder("&e");
+
+        for (int i = 0; i < totalWords; i++) {
+            currentGroup.append(words.get(i)).append(" ");
+
+            if ((i + 1) % targetGroupSize == 0 || i == totalWords - 1) {
+                compressedWords.add(currentGroup.toString().trim());
+                currentGroup = new StringBuilder("&e");
+            }
+        }
+
+        return compressedWords;
+    }
+
     public static Logger getLogger() {
         return MoreResearches.getInstance().getLogger();
     }

@@ -7,12 +7,16 @@ import io.github.thebusybiscuit.slimefun4.libraries.dough.skins.PlayerHead;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.skins.PlayerSkin;
 import io.github.thebusybiscuit.slimefun4.utils.ChestMenuUtils;
 import me.mrCookieSlime.CSCoreLibPlugin.general.Inventory.ChestMenu;
+import net.md_5.bungee.api.ChatColor;
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -35,50 +39,48 @@ public class ResearchEditor {
         ChestMenu menu = new ChestMenu("MoreResearches Editor");
 
         FileConfiguration config = MoreResearches.getInstance().getConfig();
-        ConfigurationSection researches = config.getConfigurationSection("researches");
-        int pageCount = 1;
+        ConfigurationSection researches = config.getConfigurationSection("researches") == null
+                ? config.createSection("researches")
+                : config.getConfigurationSection("researches");
 
-        if (researches != null) {
-            List<String> researchIds = researches.getKeys(false).stream()
-                    .filter(key -> Objects.nonNull(researches.getConfigurationSection(key)))
-                    .collect(Collectors.toList());
-            int researchCount = researchIds.size();
-            int start = (page - 1) * PAGE_SIZE;
-            int end = Math.min(start + PAGE_SIZE, researchCount);
-            pageCount = (int) Math.ceil(researchCount / (double) PAGE_SIZE);
-            researchIds.sort(Comparator.naturalOrder());
+        List<String> researchIds = researches.getKeys(false).stream()
+                .filter(key -> Objects.nonNull(researches.getConfigurationSection(key)))
+                .collect(Collectors.toList());
+        int researchCount = researchIds.size();
+        int start = (page - 1) * PAGE_SIZE;
+        int end = Math.min(start + PAGE_SIZE, researchCount);
+        int pages = (int) Math.ceil(researchCount / (double) PAGE_SIZE);
+        researchIds.sort(Comparator.naturalOrder());
 
-            int i = 0;
-            List<String> pageResearchIds = researchIds.subList(start, end);
+        int i = 0;
+        List<String> pageResearchIds = researchIds.subList(start, end);
 
-            for (String researchId : pageResearchIds) {
-                ConfigurationSection researchConfig = researches.getConfigurationSection(researchId);
-                String displayName = researchConfig.getString("display-name", "Error: No Display Name Provided");
-                List<String> itemIds = researchConfig.getStringList("slimefun-items");
-                Material display = itemIds.stream()
-                        .map(SlimefunItem::getById)
-                        .filter(Objects::nonNull)
-                        .findFirst()
-                        .map(SlimefunItem::getItem)
-                        .map(ItemStack::getType)
-                        .orElse(Material.BARRIER);
+        for (String researchId : pageResearchIds) {
+            ConfigurationSection researchConfig = researches.getConfigurationSection(researchId);
+            String displayName = researchConfig.getString("display-name", "Error: No Display Name Provided");
+            List<String> itemIds = researchConfig.getStringList("slimefun-items");
+            Material display = itemIds.stream()
+                    .map(SlimefunItem::getById)
+                    .filter(Objects::nonNull)
+                    .findFirst()
+                    .map(SlimefunItem::getItem)
+                    .map(ItemStack::getType)
+                    .orElse(Material.BARRIER);
 
-                menu.addItem(i, new CustomItemStack(
-                        display,
-                        displayName + " &7(&e" + researchId + "&7)",
-                        "&fLeft-Click &7to edit"
-                ));
+            menu.addItem(i, new CustomItemStack(
+                    display,
+                    displayName + " &7(&e" + researchId + "&7)",
+                    "&fLeft-Click &7to edit"
+            ));
 
-                menu.addMenuClickHandler(i, (o1, o2, o3, o4) -> {
-                    openResearchEditor(player, researchId);
-                    return false;
-                });
+            menu.addMenuClickHandler(i, (o1, o2, o3, o4) -> {
+                openResearchEditor(player, researchId);
+                return false;
+            });
 
-                i++;
-            }
+            i++;
         }
 
-        int pages = pageCount;
         ChestMenuUtils.drawBackground(menu, FOOTER_BACKGROUND);
 
         menu.addItem(46, ChestMenuUtils.getPreviousButton(player, page, pages));
@@ -110,7 +112,13 @@ public class ResearchEditor {
                 "&fLeft-Click &7to create a new Research"
         ));
         menu.addMenuClickHandler(49, (o1, o2, o3, o4) -> {
-            openResearchEditor(player, UUID.randomUUID().toString());
+            String randomId = UUID.randomUUID().toString();
+            ConfigurationSection researchConfig = researches.createSection(randomId);
+            researchConfig.set("legacy-id", 0);
+            researchConfig.set("display-name", "[Set Me!]");
+            researchConfig.set("exp-cost", 0);
+            researchConfig.set("slimefun-items", new ArrayList<>());
+            openResearchEditor(player, randomId);
             return false;
         });
 
@@ -140,7 +148,116 @@ public class ResearchEditor {
     }
 
     public static void openResearchEditor(Player player, String researchId) {
+        ConfigurationSection researchConfig = MoreResearches.getInstance().getConfig().getConfigurationSection("researches." + researchId);
+        if (researchConfig == null) {
+            return;
+        }
 
+
+        ChestMenu menu = new ChestMenu("Research Editor (" + researchId + ")");
+
+        menu.addItem(1, new CustomItemStack(
+                Material.ANVIL,
+                "&eResearch Id &7(String)",
+                "&7Current: &e" + researchId,
+                "&eLeft-Click &7to edit"
+        ));
+        menu.addMenuClickHandler(1, (o1, o2, o3, o4) -> {
+            player.closeInventory();
+            TextComponent component = new TextComponent("CLICK here to set the new Research Id");
+            component.setColor(ChatColor.YELLOW);
+            component.setBold(true);
+            component.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/mr editor session set id "));
+            player.spigot().sendMessage(component);
+            return false;
+        });
+
+        menu.addItem(3, new CustomItemStack(
+                Material.CLOCK,
+                "&eLegacy Id &7(Integer)",
+                "&7Current: &e" + researchConfig.getInt("legacy-id", -1),
+                "&eLeft-Click &7to edit"
+        ));
+        menu.addMenuClickHandler(3, (o1, o2, o3, o4) -> {
+            player.closeInventory();
+            TextComponent component = new TextComponent("CLICK here to set the new Legacy Id");
+            component.setColor(ChatColor.YELLOW);
+            component.setBold(true);
+            component.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/mr editor session set legacy-id "));
+            player.spigot().sendMessage(component);
+            return false;
+        });
+
+        menu.addItem(5, new CustomItemStack(
+                Material.NAME_TAG,
+                "&eDisplay Name &7(String)",
+                "&7Current: &e" + researchConfig.getString("display-name", "Error: No Display Name Provided"),
+                "&eLeft-Click &7to edit"
+        ));
+        menu.addMenuClickHandler(5, (o1, o2, o3, o4) -> {
+            player.closeInventory();
+            TextComponent component = new TextComponent("CLICK here to set the new Display Name");
+            component.setColor(ChatColor.YELLOW);
+            component.setBold(true);
+            component.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/mr editor session set display-name "));
+            player.spigot().sendMessage(component);
+            return false;
+        });
+
+        menu.addItem(7, new CustomItemStack(
+                Material.EXPERIENCE_BOTTLE,
+                "&eExperience Cost &7(Integer)",
+                "&7Current: &e" + researchConfig.getInt("exp-cost", -1),
+                "&eLeft-Click &7to edit"
+        ));
+        menu.addMenuClickHandler(7, (o1, o2, o3, o4) -> {
+            player.closeInventory();
+            TextComponent component = new TextComponent("CLICK here to set the new Experience Cost");
+            component.setColor(ChatColor.YELLOW);
+            component.setBold(true);
+            component.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/mr editor session set exp-cost "));
+            player.spigot().sendMessage(component);
+            return false;
+        });
+
+
+        List<String> idLore = new ArrayList<>();
+        idLore.add("&7Current:");
+        idLore.addAll(Utils.compressIds(researchConfig.getStringList("slimefun-items")));
+        idLore.add(" ");
+        idLore.add("&eLeft-Click &7to add a new id");
+        idLore.add("&eRight-Click &7to remove an id");
+        idLore.add("&eShift-Right-Click &7to clear all ids");
+
+        menu.addItem(13, new CustomItemStack(
+                Material.CHEST,
+                "&eSlimefun Item Ids &7(String List)",
+                idLore.toArray(new String[0])
+        ));
+        menu.addMenuClickHandler(13, ((o1, o2, o3, action) -> {
+            player.closeInventory();
+            String display = "CLICK here to";
+            String command = "/mr editor session ";
+            if (action.isRightClicked()) {
+                display += "remove an id";
+                command += "remove-item ";
+            } else if (action.isShiftClicked()) {
+                display += "clear all ids";
+                command += "clear-items ";
+            } else {
+                display += "add a new id";
+                command += "add-item ";
+            }
+            TextComponent component = new TextComponent(display);
+            component.setColor(ChatColor.YELLOW);
+            component.setBold(true);
+            component.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, command));
+            player.spigot().sendMessage(component);
+            return false;
+        }));
+
+        menu.open(player);
+        PLAYER_EDITING.put(player.getUniqueId(), new Pair<>(researchId, researchConfig));
     }
 
     public static Pair<String, ConfigurationSection> getEditing(Player player) {
