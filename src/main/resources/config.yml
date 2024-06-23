@@ -1,0 +1,17 @@
+researches:
+  example-research:
+    legacy-id: -5300
+    display-name: "Example Research"
+    exp-cost: 5
+    slimefun-items:
+      - "BASIC_CIRCUIT_BOARD"
+      - "SYNTHETIC_SHULKER_SHELL"
+      - "MAGICAL_GLASS"
+  different-example-research:
+    legacy-id: -5301
+    display-name: "Different Example Research"
+    exp-cost: 10
+    slimefun-items:
+      - "BUTTER"
+      - "DUCT_TAPE"
+      - "HEAVY_CREAM"

@@ -1,0 +1,4 @@
+name: MoreResearches
+version: '${project.version}'
+main: me.justahuman.moreresearches.MoreResearches
+api-version: '1.16'
