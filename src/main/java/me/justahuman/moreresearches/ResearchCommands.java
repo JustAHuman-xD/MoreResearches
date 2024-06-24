@@ -8,6 +8,7 @@ import co.aikar.commands.annotation.HelpCommand;
 import co.aikar.commands.annotation.Private;
 import co.aikar.commands.annotation.Subcommand;
 import co.aikar.commands.annotation.Syntax;
+import net.md_5.bungee.api.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -23,7 +24,7 @@ public class ResearchCommands extends BaseCommand {
 
     @Subcommand("reload")
     public void reload(CommandSender sender) {
-        sender.sendMessage("Reloading MoreResearches Config!");
+        sender.sendMessage(ChatColor.GREEN + "Reloading MoreResearches Config!");
         MoreResearches.getInstance().reloadConfig();
         Utils.loadResearches();
     }

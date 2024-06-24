@@ -130,7 +130,7 @@ public class Utils {
         StringBuilder currentGroup = new StringBuilder("&e");
 
         for (int i = 0; i < totalWords; i++) {
-            currentGroup.append(words.get(i)).append(" ");
+            currentGroup.append(words.get(i)).append(", ");
 
             if ((i + 1) % targetGroupSize == 0 || i == totalWords - 1) {
                 compressedWords.add(currentGroup.toString().trim());

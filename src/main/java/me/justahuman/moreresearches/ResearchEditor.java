@@ -62,17 +62,16 @@ public class ResearchEditor {
             ConfigurationSection researchConfig = researches.getConfigurationSection(researchId);
             String displayName = researchConfig.getString("display-name", "Error: No Display Name Provided");
             List<String> itemIds = researchConfig.getStringList("slimefun-items");
-            Material display = itemIds.stream()
+            ItemStack display = itemIds.stream()
                     .map(SlimefunItem::getById)
                     .filter(Objects::nonNull)
                     .findFirst()
                     .map(SlimefunItem::getItem)
-                    .map(ItemStack::getType)
-                    .orElse(Material.BARRIER);
+                    .orElse(new ItemStack(Material.BARRIER));
 
             menu.addItem(i, new CustomItemStack(
                     display,
-                    displayName + " &7(&e" + researchId + "&7)",
+                    "&f" + displayName + " &7(&e" + researchId + "&7)",
                     "&fLeft-Click &7to edit"
             ));
 
@@ -171,6 +170,15 @@ public class ResearchEditor {
                     player.sendMessage(ChatColors.color("&cA research already uses that id: " + newId));
                     openResearchEditor(player, researchId);
                     return;
+                } else if (newId.isBlank()) {
+                    player.sendMessage(ChatColors.color("&cResearch id cannot be blank"));
+                    openResearchEditor(player, researchId);
+                    return;
+                } else if (!newId.matches("^[a-z0-9_]+$")) {
+                    player.sendMessage(ChatColors.color("&cInvalid research id: " + newId));
+                    player.sendMessage(ChatColors.color("&cOnly lowercase letters, numbers, and underscores are allowed"));
+                    openResearchEditor(player, researchId);
+                    return;
                 }
                 researches.set(newId, researchConfig);
                 researches.set(researchId, null);
@@ -220,6 +228,11 @@ public class ResearchEditor {
             player.closeInventory();
             player.sendMessage(ChatColors.color("&e&lEnter the new Display Name:"));
             ChatUtils.awaitInput(player, newName -> {
+                if (newName.isBlank()) {
+                    player.sendMessage(ChatColors.color("&cDisplay name cannot be blank"));
+                    openResearchEditor(player, researchId);
+                    return;
+                }
                 researchConfig.set("display-name", newName);
                 openResearchEditor(player, researchId);
             });
