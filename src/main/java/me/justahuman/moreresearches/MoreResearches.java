@@ -6,6 +6,9 @@ import co.aikar.commands.PaperCommandManager;
 import io.github.thebusybiscuit.slimefun4.api.SlimefunAddon;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
 import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
+import io.github.thebusybiscuit.slimefun4.libraries.dough.updater.BlobBuildUpdater;
+import org.bstats.bukkit.Metrics;
+import org.bstats.charts.SimplePie;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -18,6 +21,8 @@ public class MoreResearches extends JavaPlugin implements SlimefunAddon {
     public void onEnable() {
         instance = this;
 
+        saveDefaultConfig();
+
         PluginManager pluginManager = getServer().getPluginManager();
         pluginManager.registerEvents(new RegistryListener(), this);
 
@@ -29,6 +34,17 @@ public class MoreResearches extends JavaPlugin implements SlimefunAddon {
                 .stream().map(SlimefunItem::getId).collect(Collectors.toSet()));
 
         commandManager.registerCommand(new ResearchCommands());
+
+        if (getConfig().getBoolean("options.auto-update") && getDescription().getVersion().startsWith("Dev - ")) {
+            BlobBuildUpdater updater = new BlobBuildUpdater(this, this.getFile(), "MoreResearches", "Dev");
+            updater.start();
+        }
+
+        Metrics metrics = new Metrics(this, 22383);
+        metrics.addCustomChart(new SimplePie("server_custom_research_count",
+                () -> String.valueOf(Slimefun.getRegistry().getResearches().stream()
+                        .filter(research -> research.getKey().getNamespace().equalsIgnoreCase("moreresearches"))
+                        .count())));
     }
 
     @Override
