@@ -10,16 +10,19 @@ import io.github.thebusybiscuit.slimefun4.libraries.dough.skins.PlayerSkin;
 import io.github.thebusybiscuit.slimefun4.utils.ChatUtils;
 import io.github.thebusybiscuit.slimefun4.utils.ChestMenuUtils;
 import me.mrCookieSlime.CSCoreLibPlugin.general.Inventory.ChestMenu;
+import me.mrCookieSlime.CSCoreLibPlugin.general.Inventory.ClickAction;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -276,6 +279,7 @@ public class ResearchEditor {
         idLore.addAll(Utils.compressIds(researchConfig.getStringList("slimefun-items")));
         idLore.add(" ");
         idLore.add("&eLeft-Click &7to add a new id");
+        idLore.add("&eLeft-Click &7with a &eSlimefun Item &7to add/remove it");
         idLore.add("&eRight-Click &7to remove an id");
         idLore.add("&eShift-Right-Click &7to clear all ids");
 
@@ -284,33 +288,51 @@ public class ResearchEditor {
                 "&eSlimefun Item Ids &7(String List)",
                 idLore.toArray(new String[0])
         ));
-        menu.addMenuClickHandler(13, ((o1, o2, o3, action) -> {
-            player.closeInventory();
-            if (action.isRightClicked() && action.isShiftClicked()) {
-                researchConfig.set("slimefun-items", new ArrayList<>());
-                openResearchEditor(player, researchId);
-                return false;
-            } else if (action.isRightClicked()) {
-                player.sendMessage(ChatColors.color("&e&lEnter the id to remove:"));
-                ChatUtils.awaitInput(player, id -> {
-                    List<String> itemIds = researchConfig.getStringList("slimefun-items");
-                    if (itemIds.remove(id)) {
+        menu.addMenuClickHandler(13, new ChestMenu.AdvancedMenuClickHandler() {
+            @Override
+            public boolean onClick(Player o1, int o2, ItemStack o3, ClickAction action) {
+                player.closeInventory();
+                if (action.isRightClicked() && action.isShiftClicked()) {
+                    researchConfig.set("slimefun-items", new ArrayList<>());
+                    openResearchEditor(player, researchId);
+                } else if (action.isRightClicked()) {
+                    player.sendMessage(ChatColors.color("&e&lEnter the id to remove:"));
+                    ChatUtils.awaitInput(player, id -> {
+                        List<String> itemIds = researchConfig.getStringList("slimefun-items");
+                        if (itemIds.remove(id)) {
+                            researchConfig.set("slimefun-items", itemIds);
+                        }
+                        openResearchEditor(player, researchId);
+                    });
+                } else {
+                    player.sendMessage(ChatColors.color("&e&lEnter the new id:"));
+                    ChatUtils.awaitInput(player, id -> {
+                        List<String> itemIds = researchConfig.getStringList("slimefun-items");
+                        itemIds.add(id);
                         researchConfig.set("slimefun-items", itemIds);
-                    }
-                    openResearchEditor(player, researchId);
-                });
-                return false;
-            } else {
-                player.sendMessage(ChatColors.color("&e&lEnter the new id:"));
-                ChatUtils.awaitInput(player, id -> {
-                    List<String> itemIds = researchConfig.getStringList("slimefun-items");
-                    itemIds.add(id);
-                    researchConfig.set("slimefun-items", itemIds);
-                    openResearchEditor(player, researchId);
-                });
+                        openResearchEditor(player, researchId);
+                    });
+                }
                 return false;
             }
-        }));
+
+            @Override
+            public boolean onClick(InventoryClickEvent o1, Player o2, int o3, ItemStack cursor, ClickAction action) {
+                if (cursor != null && !cursor.getType().isAir()) {
+                    Optional<String> id = Slimefun.getItemDataService().getItemData(cursor);
+                    if (id.isEmpty()) {
+                        player.sendMessage(ChatColors.color("&cThat is not a slimefun item!"));
+                    } else {
+                        List<String> itemIds = researchConfig.getStringList("slimefun-items");
+                        itemIds.add(id.get());
+                        researchConfig.set("slimefun-items", itemIds);
+                        openResearchEditor(player, researchId);
+                    }
+                    return false;
+                }
+                return onClick(o2, o3, cursor, action);
+            }
+        });
 
         menu.addItem(17, new CustomItemStack(
                 LIME_CHECKMARK,
@@ -322,6 +344,8 @@ public class ResearchEditor {
             return false;
         });
 
+        menu.setEmptySlotsClickable(false);
+        menu.setPlayerInventoryClickable(true);
         menu.open(player);
     }
 }
