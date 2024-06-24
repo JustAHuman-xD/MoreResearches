@@ -8,7 +8,6 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -20,10 +19,6 @@ public class Utils {
         try {
             RESEARCH_NAME_FIELD = Research.class.getDeclaredField("name");
             RESEARCH_NAME_FIELD.setAccessible(true);
-
-            Field modifiersField = Field.class.getDeclaredField("modifiers");
-            modifiersField.setAccessible(true);
-            modifiersField.setInt(RESEARCH_NAME_FIELD, RESEARCH_NAME_FIELD.getModifiers() & ~Modifier.FINAL);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -38,13 +33,27 @@ public class Utils {
                 continue;
             }
 
-            research.getAffectedItems().forEach(slimefunItem -> slimefunItem.setResearch(null));
+            for (SlimefunItem slimefunItem : new ArrayList<>(research.getAffectedItems())) {
+                slimefunItem.setResearch(null);
+            }
 
             String researchId = key.getKey();
-            if (researches != null && researches.contains(researchId)) {
-                Utils.updateResearch(research, researchId, researches.getConfigurationSection(researchId));
-            } else {
+            if (researches == null || !researches.contains(researchId)) {
                 Slimefun.getRegistry().getResearches().remove(research);
+            }
+        }
+
+        if (researches != null) {
+            for (String researchId : researches.getKeys(false)) {
+                Research research = Slimefun.getRegistry().getResearches().stream()
+                        .filter(match -> match.getKey().equals(new NamespacedKey(MoreResearches.getInstance(), researchId)))
+                        .findFirst().orElse(null);
+                ConfigurationSection researchConfig = researches.getConfigurationSection(researchId);
+                if (research == null && researchConfig != null) {
+                    Utils.createResearch(researchId, researchConfig);
+                } else if (research != null && researchConfig != null){
+                    Utils.updateResearch(research, researchId, researchConfig);
+                }
             }
         }
     }
@@ -52,13 +61,13 @@ public class Utils {
     public static Research createResearch(String researchId, ConfigurationSection researchConfig) {
         MoreResearches plugin = MoreResearches.getInstance();
         int legacyId = researchConfig.getInt("legacy-id", -113132);
-        if (legacyId != -113132) {
+        if (legacyId == -113132) {
             getLogger().warning("Invalid research, you need to set a legacy-id, negative numbers are recommended: " + researchId);
             return null;
         }
 
         String displayName = researchConfig.getString("display-name", "Error: No Display Name Provided");
-        int expCost = researchConfig.getInt("exp-cost", -1);
+        int expCost = researchConfig.getInt("exp-cost", 0);
         List<String> itemIds = researchConfig.getStringList("slimefun-items");
 
         if (itemIds.isEmpty()) {
@@ -108,7 +117,7 @@ public class Utils {
             return;
         }
 
-        research.setCost(researchConfig.getInt("exp-cost", -1));
+        research.setCost(researchConfig.getInt("exp-cost", 0));
         research.addItems(items);
     }
 

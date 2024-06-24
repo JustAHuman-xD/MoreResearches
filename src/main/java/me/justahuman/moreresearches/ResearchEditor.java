@@ -1,15 +1,15 @@
 package me.justahuman.moreresearches;
 
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
-import io.github.thebusybiscuit.slimefun4.libraries.dough.collections.Pair;
+import io.github.thebusybiscuit.slimefun4.api.researches.Research;
+import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
+import io.github.thebusybiscuit.slimefun4.libraries.dough.common.ChatColors;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.items.CustomItemStack;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.skins.PlayerHead;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.skins.PlayerSkin;
+import io.github.thebusybiscuit.slimefun4.utils.ChatUtils;
 import io.github.thebusybiscuit.slimefun4.utils.ChestMenuUtils;
 import me.mrCookieSlime.CSCoreLibPlugin.general.Inventory.ChestMenu;
-import net.md_5.bungee.api.ChatColor;
-import net.md_5.bungee.api.chat.ClickEvent;
-import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -18,21 +18,24 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class ResearchEditor {
-    private static final Map<UUID, Pair<String, ConfigurationSection>> PLAYER_EDITING = new HashMap<>();
     private static final int[] FOOTER_BACKGROUND = { 45, 47, 51, 53 };
-    // # < # D N S # > #
     private static final int PAGE_SIZE = 45;
 
+    // Head From: https://minecraft-heads.com/custom-heads/head/9382-red-x
+    private static final ItemStack RED_X = PlayerHead.getItemStack(PlayerSkin.fromHashCode("beb588b21a6f98ad1ff4e085c552dcb050efc9cab427f46048f18fc803475f7"));
+    // Head From: https://minecraft-heads.com/custom-heads/head/8768-black-plus
+    private static final ItemStack BLACK_PLUS = PlayerHead.getItemStack(PlayerSkin.fromHashCode("9a2d891c6ae9f6baa040d736ab84d48344bb6b70d7f1a280dd12cbac4d777"));
+    // Head From: https://minecraft-heads.com/custom-heads/head/21771-lime-checkmark
+    private static final ItemStack LIME_CHECKMARK = PlayerHead.getItemStack(PlayerSkin.fromHashCode("a92e31ffb59c90ab08fc9dc1fe26802035a3a47c42fee63423bcdb4262ecb9b6"));
+
     public static void openMainMenu(Player player) {
-        openMainMenu(player, 0);
+        openMainMenu(player, 1);
     }
 
     public static void openMainMenu(Player player, int page) {
@@ -92,8 +95,7 @@ public class ResearchEditor {
         });
 
         menu.addItem(48, new CustomItemStack(
-                // Head From: https://minecraft-heads.com/custom-heads/head/9382-red-x
-                PlayerHead.getItemStack(PlayerSkin.fromHashCode("beb588b21a6f98ad1ff4e085c552dcb050efc9cab427f46048f18fc803475f7")),
+                RED_X,
                 "&cDiscard Changes",
                 "&cLeft-Click &7to discard all changes",
                 "&7This effectively reloads the config"
@@ -106,8 +108,7 @@ public class ResearchEditor {
         });
 
         menu.addItem(49, new CustomItemStack(
-                // Head From: https://minecraft-heads.com/custom-heads/head/8768-black-plus
-                PlayerHead.getItemStack(PlayerSkin.fromHashCode("9a2d891c6ae9f6baa040d736ab84d48344bb6b70d7f1a280dd12cbac4d777")),
+                BLACK_PLUS,
                 "&aNew Research",
                 "&fLeft-Click &7to create a new Research"
         ));
@@ -123,8 +124,7 @@ public class ResearchEditor {
         });
 
         menu.addItem(50, new CustomItemStack(
-                // Head From: https://minecraft-heads.com/custom-heads/head/21771-lime-checkmark
-                PlayerHead.getItemStack(PlayerSkin.fromHashCode("a92e31ffb59c90ab08fc9dc1fe26802035a3a47c42fee63423bcdb4262ecb9b6")),
+                LIME_CHECKMARK,
                 "&aSave Changes",
                 "&aLeft-Click &7to save all changes to the",
                 "&7config file & load them in-game."
@@ -148,13 +148,14 @@ public class ResearchEditor {
     }
 
     public static void openResearchEditor(Player player, String researchId) {
-        ConfigurationSection researchConfig = MoreResearches.getInstance().getConfig().getConfigurationSection("researches." + researchId);
+        FileConfiguration config = MoreResearches.getInstance().getConfig();
+        ConfigurationSection researchConfig = config.getConfigurationSection("researches." + researchId);
         if (researchConfig == null) {
             return;
         }
 
-
-        ChestMenu menu = new ChestMenu("Research Editor (" + researchId + ")");
+        ConfigurationSection researches = config.getConfigurationSection("researches");
+        ChestMenu menu = new ChestMenu("Research Editor");
 
         menu.addItem(1, new CustomItemStack(
                 Material.ANVIL,
@@ -164,11 +165,17 @@ public class ResearchEditor {
         ));
         menu.addMenuClickHandler(1, (o1, o2, o3, o4) -> {
             player.closeInventory();
-            TextComponent component = new TextComponent("CLICK here to set the new Research Id");
-            component.setColor(ChatColor.YELLOW);
-            component.setBold(true);
-            component.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/mr editor session set id "));
-            player.spigot().sendMessage(component);
+            player.sendMessage(ChatColors.color("&e&lEnter the new Research Id (ex. test_research):"));
+            ChatUtils.awaitInput(player, newId -> {
+                if (researches.getKeys(false).contains(newId)) {
+                    player.sendMessage(ChatColors.color("&cA research already uses that id: " + newId));
+                    openResearchEditor(player, researchId);
+                    return;
+                }
+                researches.set(newId, researchConfig);
+                researches.set(researchId, null);
+                openResearchEditor(player, newId);
+            });
             return false;
         });
 
@@ -180,11 +187,26 @@ public class ResearchEditor {
         ));
         menu.addMenuClickHandler(3, (o1, o2, o3, o4) -> {
             player.closeInventory();
-            TextComponent component = new TextComponent("CLICK here to set the new Legacy Id");
-            component.setColor(ChatColor.YELLOW);
-            component.setBold(true);
-            component.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/mr editor session set legacy-id "));
-            player.spigot().sendMessage(component);
+            player.sendMessage(ChatColors.color("&e&lEnter the new Legacy Id (ex. -1):"));
+            ChatUtils.awaitInput(player, newLegacyId -> {
+                int legacyId;
+                try {
+                    legacyId = Integer.parseInt(newLegacyId);
+                } catch (NumberFormatException e) {
+                    player.sendMessage(ChatColors.color("&cInvalid number: " + newLegacyId));
+                    openResearchEditor(player, researchId);
+                    return;
+                }
+
+                if (Slimefun.getRegistry().getResearches().stream().map(Research::getID).anyMatch(id -> id.equals(legacyId))
+                        || MoreResearches.getInstance().getConfig().getConfigurationSection("researches").getValues(true).values().contains(legacyId)) {
+                    player.sendMessage("A research already uses that legacyId: " + legacyId);
+                    openResearchEditor(player, researchId);
+                    return;
+                }
+                researchConfig.set("legacy-id", legacyId);
+                openResearchEditor(player, researchId);
+            });
             return false;
         });
 
@@ -196,27 +218,42 @@ public class ResearchEditor {
         ));
         menu.addMenuClickHandler(5, (o1, o2, o3, o4) -> {
             player.closeInventory();
-            TextComponent component = new TextComponent("CLICK here to set the new Display Name");
-            component.setColor(ChatColor.YELLOW);
-            component.setBold(true);
-            component.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/mr editor session set display-name "));
-            player.spigot().sendMessage(component);
+            player.sendMessage(ChatColors.color("&e&lEnter the new Display Name:"));
+            ChatUtils.awaitInput(player, newName -> {
+                researchConfig.set("display-name", newName);
+                openResearchEditor(player, researchId);
+            });
             return false;
         });
 
         menu.addItem(7, new CustomItemStack(
                 Material.EXPERIENCE_BOTTLE,
                 "&eExperience Cost &7(Integer)",
-                "&7Current: &e" + researchConfig.getInt("exp-cost", -1),
+                "&7Current: &e" + researchConfig.getInt("exp-cost", 0),
                 "&eLeft-Click &7to edit"
         ));
         menu.addMenuClickHandler(7, (o1, o2, o3, o4) -> {
             player.closeInventory();
-            TextComponent component = new TextComponent("CLICK here to set the new Experience Cost");
-            component.setColor(ChatColor.YELLOW);
-            component.setBold(true);
-            component.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/mr editor session set exp-cost "));
-            player.spigot().sendMessage(component);
+            player.sendMessage(ChatColors.color("&e&lEnter the new Experience Cost (ex. 10):"));
+            ChatUtils.awaitInput(player, newExpCost -> {
+                int expCost;
+                try {
+                    expCost = Integer.parseInt(newExpCost);
+                } catch (NumberFormatException e) {
+                    player.sendMessage(ChatColors.color("&cInvalid number: " + newExpCost));
+                    openResearchEditor(player, researchId);
+                    return;
+                }
+
+                if (expCost < 0) {
+                    player.sendMessage(ChatColors.color("&cExperience cost cannot be negative: " + expCost));
+                    openResearchEditor(player, researchId);
+                    return;
+                }
+
+                researchConfig.set("exp-cost", expCost);
+                openResearchEditor(player, researchId);
+            });
             return false;
         });
 
@@ -236,31 +273,42 @@ public class ResearchEditor {
         ));
         menu.addMenuClickHandler(13, ((o1, o2, o3, action) -> {
             player.closeInventory();
-            String display = "CLICK here to";
-            String command = "/mr editor session ";
-            if (action.isRightClicked()) {
-                display += "remove an id";
-                command += "remove-item ";
-            } else if (action.isShiftClicked()) {
-                display += "clear all ids";
-                command += "clear-items ";
+            if (action.isRightClicked() && action.isShiftClicked()) {
+                researchConfig.set("slimefun-items", new ArrayList<>());
+                openResearchEditor(player, researchId);
+                return false;
+            } else if (action.isRightClicked()) {
+                player.sendMessage(ChatColors.color("&e&lEnter the id to remove:"));
+                ChatUtils.awaitInput(player, id -> {
+                    List<String> itemIds = researchConfig.getStringList("slimefun-items");
+                    if (itemIds.remove(id)) {
+                        researchConfig.set("slimefun-items", itemIds);
+                    }
+                    openResearchEditor(player, researchId);
+                });
+                return false;
             } else {
-                display += "add a new id";
-                command += "add-item ";
+                player.sendMessage(ChatColors.color("&e&lEnter the new id:"));
+                ChatUtils.awaitInput(player, id -> {
+                    List<String> itemIds = researchConfig.getStringList("slimefun-items");
+                    itemIds.add(id);
+                    researchConfig.set("slimefun-items", itemIds);
+                    openResearchEditor(player, researchId);
+                });
+                return false;
             }
-            TextComponent component = new TextComponent(display);
-            component.setColor(ChatColor.YELLOW);
-            component.setBold(true);
-            component.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, command));
-            player.spigot().sendMessage(component);
-            return false;
         }));
 
-        menu.open(player);
-        PLAYER_EDITING.put(player.getUniqueId(), new Pair<>(researchId, researchConfig));
-    }
+        menu.addItem(17, new CustomItemStack(
+                LIME_CHECKMARK,
+                "&aDone",
+                "&aLeft-Click &7to return to the main page"
+        ));
+        menu.addMenuClickHandler(17, (o1, o2, o3, o4) -> {
+            openMainMenu(player);
+            return false;
+        });
 
-    public static Pair<String, ConfigurationSection> getEditing(Player player) {
-        return PLAYER_EDITING.get(player.getUniqueId());
+        menu.open(player);
     }
 }
