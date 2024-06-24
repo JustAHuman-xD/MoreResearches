@@ -207,7 +207,7 @@ public class ResearchEditor {
                 }
 
                 if (Slimefun.getRegistry().getResearches().stream().map(Research::getID).anyMatch(id -> id.equals(legacyId))
-                        || MoreResearches.getInstance().getConfig().getConfigurationSection("researches").getValues(true).values().contains(legacyId)) {
+                        || researches.getValues(true).values().contains(legacyId)) {
                     player.sendMessage("A research already uses that legacyId: " + legacyId);
                     openResearchEditor(player, researchId);
                     return;

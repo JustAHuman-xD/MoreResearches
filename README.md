@@ -1,8 +1,8 @@
 # More Researches
-MoreResearches is a new simple Slimefun Addon for Server Owners/Administrators interested in adding more researches and even changing exisiting researches for Slimefun4 and it's addons!
+MoreResearches is a new simple Slimefun Addon that gives server owners/admins the ability to create custom researches!
 
 ## Special Thanks
-MoreResearches some Minecraft Heads from minecraft-heads.com!
+MoreResearches uses some Minecraft Heads from minecraft-heads.com!
 Please show them some support!
 
 

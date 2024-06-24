@@ -9,11 +9,14 @@ import org.bukkit.configuration.file.FileConfiguration;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Logger;
 
 public class Utils {
+    private static final Map<SlimefunItem, Research> ORIGINAL_RESEARCHES = new HashMap<>();
     private static final Field RESEARCH_NAME_FIELD;
     static {
         try {
@@ -27,27 +30,26 @@ public class Utils {
     public static void loadResearches() {
         FileConfiguration config = MoreResearches.getInstance().getConfig();
         ConfigurationSection researches = config.getConfigurationSection("researches");
+        Map<String, Research> customResearches = new HashMap<>();
         for (Research research : new ArrayList<>(Slimefun.getRegistry().getResearches())) {
-            NamespacedKey key = research.getKey();
-            if (!key.getNamespace().equalsIgnoreCase("moreresearches")) {
+            if (!isCustomResearch(research)) {
                 continue;
             }
 
             for (SlimefunItem slimefunItem : new ArrayList<>(research.getAffectedItems())) {
-                slimefunItem.setResearch(null);
+                slimefunItem.setResearch(ORIGINAL_RESEARCHES.get(slimefunItem));
             }
 
-            String researchId = key.getKey();
+            String researchId = research.getKey().getKey();
             if (researches == null || !researches.contains(researchId)) {
                 Slimefun.getRegistry().getResearches().remove(research);
             }
+            customResearches.put(researchId, research);
         }
 
         if (researches != null) {
             for (String researchId : researches.getKeys(false)) {
-                Research research = Slimefun.getRegistry().getResearches().stream()
-                        .filter(match -> match.getKey().equals(new NamespacedKey(MoreResearches.getInstance(), researchId)))
-                        .findFirst().orElse(null);
+                Research research = customResearches.get(researchId);
                 ConfigurationSection researchConfig = researches.getConfigurationSection(researchId);
                 if (research == null && researchConfig != null) {
                     Utils.createResearch(researchId, researchConfig);
@@ -85,6 +87,12 @@ public class Utils {
             return null;
         }
 
+        for (SlimefunItem item : items) {
+            if (!ORIGINAL_RESEARCHES.containsKey(item) && !isCustomResearch(item.getResearch())) {
+                ORIGINAL_RESEARCHES.put(item, item.getResearch());
+            }
+        }
+
         Research research = new Research(new NamespacedKey(plugin, researchId), legacyId, displayName, expCost);
         research.addItems(items);
         research.register();
@@ -107,6 +115,12 @@ public class Utils {
         if (items.length == 0) {
             getLogger().warning("Invalid research, no valid items: " + researchId);
             return;
+        }
+
+        for (SlimefunItem item : items) {
+            if (!ORIGINAL_RESEARCHES.containsKey(item) && !isCustomResearch(item.getResearch())) {
+                ORIGINAL_RESEARCHES.put(item, item.getResearch());
+            }
         }
 
         try {
@@ -139,6 +153,10 @@ public class Utils {
         }
 
         return compressedWords;
+    }
+
+    public static boolean isCustomResearch(Research research) {
+        return research != null && research.getKey().getNamespace().equalsIgnoreCase("moreresearches");
     }
 
     public static Logger getLogger() {
