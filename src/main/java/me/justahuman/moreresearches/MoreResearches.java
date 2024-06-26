@@ -12,6 +12,7 @@ import org.bstats.charts.SimplePie;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class MoreResearches extends JavaPlugin implements SlimefunAddon {
@@ -32,6 +33,7 @@ public class MoreResearches extends JavaPlugin implements SlimefunAddon {
         CommandCompletions<BukkitCommandCompletionContext> completions = commandManager.getCommandCompletions();
         completions.registerAsyncCompletion("slimefun_items", c -> Slimefun.getRegistry().getEnabledSlimefunItems()
                 .stream().map(SlimefunItem::getId).collect(Collectors.toSet()));
+        completions.registerStaticCompletion("languages", List.of("en_us"));
 
         commandManager.registerCommand(new ResearchCommands());
 

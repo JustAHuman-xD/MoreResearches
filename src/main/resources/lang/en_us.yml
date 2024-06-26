@@ -1,0 +1,101 @@
+startup:
+  load: "Loading researches..."
+  loaded: "Loaded %s custom researches for %s items"
+
+command:
+  set-lang: "Set language to %s"
+  reload: "Reloading MoreResearches Config!"
+
+editor:
+  main-page:
+    title: "MoreResearches Editor"
+    edit-research: "&fLeft-Click &7to edit"
+    discard-changes:
+      name: "&cDiscard Changes"
+      lore:
+        - "&cLeft-Click &7to discard all changes"
+        - "&7This effectively reloads the config"
+    new-research:
+      name: "&fNew Research"
+      lore:
+        - "&fLeft-Click &7to create a new research"
+    save-changes:
+      name: "&aSave Changes"
+      lore:
+        - "&aLeft-Click &7to save all changes to the"
+        - "&7config file & load them in-game."
+  research:
+    title: "Research Editor"
+    edit-id:
+      name: "&eResearch Id &7(String)"
+      lore:
+        - "&7Current: &e%s"
+        - "&7The unique identifier for this research"
+        - "&7Only alphanumeric characters and underscores allowed"
+        - "&eLeft-Click &7to edit"
+      prompt: "&e&lEnter the new Research Id (ex. test_research):"
+    edit-legacy-id:
+      name: "&eLegacy Id &7(Integer)"
+      lore:
+        - "&7Current: &e%s"
+        - "&7The unique numeric identifier for this research"
+        - "&7Negative numbers recommended for custom researches"
+        - "&eLeft-Click &7to edit"
+      prompt: "&e&lEnter the new Legacy Id (ex. -1):"
+    edit-name:
+      name: "&eDisplay Name &7(String)"
+      lore:
+        - "&7Current: &e%s"
+        - "&7The display name of the research"
+        - "&eLeft-Click &7to edit"
+      prompt: "&e&lEnter the new Display Name (ex. Test Research):"
+    edit-exp-cost:
+      name: "&eExperience Cost &7(Integer)"
+      lore:
+        - "&7Current: &e%s"
+        - "&7The experience cost to unlock this research"
+        - "&eLeft-Click &7to edit"
+      prompt: "&e&lEnter the new Experience Cost (ex. 10):"
+    delete:
+      name: "&cDelete Research"
+      lore:
+        - "&cLeft-Click &7to delete this research"
+      prompt: "Are you sure you want to delete this research? "
+      confirm: "&a[✔]"
+      confirm-hover: "&aClick to confirm"
+      cancel: "&c[✘]"
+      cancel-hover: "&cClick to cancel"
+    edit-items:
+      name: "&eSlimefun Item Ids &7(String List)"
+      lore:
+        - "&7Current: "
+        - "{current}"
+        - " "
+        - "&eLeft-Click &7to add a new id"
+        - "&eLeft-Click &7with a &eSlimefun Item &7to add/remove it"
+        - "&eRight-Click &7to remove an id"
+        - "&eShift-Right-Click &7to clear all ids"
+      prompt-remove: "&e&lEnter the id to remove:"
+      prompt-add: "&e&lEnter the new id:"
+    done:
+      name: "&aDone"
+      lore:
+        - "&aLeft-Click &7to return to the main page"
+
+warnings:
+  command:
+    invalid-lang: "Invalid language: %s"
+  research:
+    no-body: "Invalid research, no body: %s"
+  editor:
+    existing-id: "&cA research already uses that id"
+    blank-id: "&cResearch Id cannot be blank"
+    invalid-id: "&cInvalid Research Id: %s"
+    existing-legacy-id: "&cA research already uses that legacy id"
+    invalid-number: "&cInvalid number: %s"
+    blank-name: "&cDisplay Name cannot be blank"
+    negative-exp-cost: "&cExperience Cost cannot be negative"
+    item-id-not-found: "&cId not found in research"
+    invalid-item-id: "&cInvalid Slimefun Item Id: %s"
+    duplicate-item-id: "&cId already exists in research"
+    not-slimefun-item: "&cItem is not a Slimefun Item: %s"
