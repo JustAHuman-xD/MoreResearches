@@ -21,11 +21,11 @@ public class RegistryListener implements Listener {
         if (researches != null) {
             int researchCount = 0;
             Set<String> uniqueItemIds = new HashSet<>();
-            Utils.getLogger().info("Loading researches...");
+            Utils.getLogger().info(Utils.translated("startup.load"));
             for (String researchId : researches.getKeys(false)) {
                 ConfigurationSection researchConfig = researches.getConfigurationSection(researchId);
                 if (researchConfig == null) {
-                    Utils.getLogger().warning("Invalid research, no body: " + researchId);
+                    Utils.getLogger().warning(Utils.translated("warnings.research.no-body", researchId));
                     continue;
                 }
 
@@ -35,7 +35,7 @@ public class RegistryListener implements Listener {
                     uniqueItemIds.addAll(research.getAffectedItems().stream().map(SlimefunItem::getId).collect(Collectors.toSet()));
                 }
             }
-            Utils.getLogger().info("Loaded " + researchCount + " custom researches for " + uniqueItemIds.size() + " items");
+            Utils.getLogger().info(Utils.translated("startup.loaded", researchCount, uniqueItemIds.size()));
         }
     }
 }

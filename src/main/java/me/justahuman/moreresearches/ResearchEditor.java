@@ -3,27 +3,38 @@ package me.justahuman.moreresearches;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
 import io.github.thebusybiscuit.slimefun4.api.researches.Research;
 import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
-import io.github.thebusybiscuit.slimefun4.libraries.dough.common.ChatColors;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.items.CustomItemStack;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.skins.PlayerHead;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.skins.PlayerSkin;
 import io.github.thebusybiscuit.slimefun4.utils.ChatUtils;
 import io.github.thebusybiscuit.slimefun4.utils.ChestMenuUtils;
 import me.mrCookieSlime.CSCoreLibPlugin.general.Inventory.ChestMenu;
+import me.mrCookieSlime.CSCoreLibPlugin.general.Inventory.ClickAction;
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.HoverEvent;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+@SuppressWarnings("deprecation")
 public class ResearchEditor {
+    private static final Map<UUID, Consumer<String>> CALLBACKS = new HashMap<>();
     private static final int[] FOOTER_BACKGROUND = { 45, 47, 51, 53 };
     private static final int PAGE_SIZE = 45;
 
@@ -39,7 +50,7 @@ public class ResearchEditor {
     }
 
     public static void openMainMenu(Player player, int page) {
-        ChestMenu menu = new ChestMenu("MoreResearches Editor");
+        ChestMenu menu = new ChestMenu(Utils.translated("editor.main-page.title"));
 
         FileConfiguration config = MoreResearches.getInstance().getConfig();
         ConfigurationSection researches = config.getConfigurationSection("researches") == null
@@ -52,7 +63,7 @@ public class ResearchEditor {
         int researchCount = researchIds.size();
         int start = (page - 1) * PAGE_SIZE;
         int end = Math.min(start + PAGE_SIZE, researchCount);
-        int pages = (int) Math.ceil(researchCount / (double) PAGE_SIZE);
+        int pages = (int) Math.max(1, Math.ceil(researchCount / (double) PAGE_SIZE));
         researchIds.sort(Comparator.naturalOrder());
 
         int i = 0;
@@ -72,7 +83,7 @@ public class ResearchEditor {
             menu.addItem(i, new CustomItemStack(
                     display,
                     "&f" + displayName + " &7(&e" + researchId + "&7)",
-                    "&fLeft-Click &7to edit"
+                    Utils.translated("editor.main-page.edit-research")
             ));
 
             menu.addMenuClickHandler(i, (o1, o2, o3, o4) -> {
@@ -93,12 +104,7 @@ public class ResearchEditor {
             return false;
         });
 
-        menu.addItem(48, new CustomItemStack(
-                RED_X,
-                "&cDiscard Changes",
-                "&cLeft-Click &7to discard all changes",
-                "&7This effectively reloads the config"
-        ));
+        menu.addItem(48, Utils.translatedStack(RED_X, "editor.main-page.discard-changes"));
         menu.addMenuClickHandler(48, (o1, o2, o3, o4) -> {
             player.closeInventory();
             MoreResearches.getInstance().reloadConfig();
@@ -106,11 +112,7 @@ public class ResearchEditor {
             return false;
         });
 
-        menu.addItem(49, new CustomItemStack(
-                BLACK_PLUS,
-                "&aNew Research",
-                "&fLeft-Click &7to create a new Research"
-        ));
+        menu.addItem(49, Utils.translatedStack(BLACK_PLUS, "editor.main-page.new-research"));
         menu.addMenuClickHandler(49, (o1, o2, o3, o4) -> {
             String randomId = UUID.randomUUID().toString();
             ConfigurationSection researchConfig = researches.createSection(randomId);
@@ -122,12 +124,7 @@ public class ResearchEditor {
             return false;
         });
 
-        menu.addItem(50, new CustomItemStack(
-                LIME_CHECKMARK,
-                "&aSave Changes",
-                "&aLeft-Click &7to save all changes to the",
-                "&7config file & load them in-game."
-        ));
+        menu.addItem(50, Utils.translatedStack(LIME_CHECKMARK, "editor.main-page.save-changes"));
         menu.addMenuClickHandler(50, (o1, o2, o3, o4) -> {
             player.closeInventory();
             MoreResearches.getInstance().saveConfig();
@@ -154,30 +151,28 @@ public class ResearchEditor {
         }
 
         ConfigurationSection researches = config.getConfigurationSection("researches");
-        ChestMenu menu = new ChestMenu("Research Editor");
+        if (researches == null) {
+            return;
+        }
 
-        menu.addItem(1, new CustomItemStack(
-                Material.ANVIL,
-                "&eResearch Id &7(String)",
-                "&7Current: &e" + researchId,
-                "&eLeft-Click &7to edit"
-        ));
+        ChestMenu menu = new ChestMenu(Utils.translated("editor.research.title"));
+
+        menu.addItem(1, Utils.translatedStack(Material.ANVIL, "editor.research.edit-id", researchId));
         menu.addMenuClickHandler(1, (o1, o2, o3, o4) -> {
             player.closeInventory();
-            player.sendMessage(ChatColors.color("&e&lEnter the new Research Id (ex. test_research):"));
+            Utils.send(player, "editor.research.edit-id.prompt");
             ChatUtils.awaitInput(player, newId -> {
                 if (researches.getKeys(false).contains(newId)) {
-                    player.sendMessage(ChatColors.color("&cA research already uses that id: " + newId));
-                    openResearchEditor(player, researchId);
+                    Utils.send(player, "warnings.editor.existing-id");
+                    menu.open(player);
                     return;
                 } else if (newId.isBlank()) {
-                    player.sendMessage(ChatColors.color("&cResearch id cannot be blank"));
-                    openResearchEditor(player, researchId);
+                    Utils.send(player, "warnings.editor.blank-id");
+                    menu.open(player);
                     return;
                 } else if (!newId.matches("^[a-z0-9_]+$")) {
-                    player.sendMessage(ChatColors.color("&cInvalid research id: " + newId));
-                    player.sendMessage(ChatColors.color("&cOnly lowercase letters, numbers, and underscores are allowed"));
-                    openResearchEditor(player, researchId);
+                    Utils.send(player, "warnings.editor.invalid-id");
+                    menu.open(player);
                     return;
                 }
                 researches.set(newId, researchConfig);
@@ -187,141 +182,204 @@ public class ResearchEditor {
             return false;
         });
 
-        menu.addItem(3, new CustomItemStack(
-                Material.CLOCK,
-                "&eLegacy Id &7(Integer)",
-                "&7Current: &e" + researchConfig.getInt("legacy-id", -1),
-                "&eLeft-Click &7to edit"
-        ));
-        menu.addMenuClickHandler(3, (o1, o2, o3, o4) -> {
+        menu.addItem(3, Utils.translatedStack(Material.CLOCK, "editor.research.edit-legacy-id", researchConfig.getInt("legacy-id", -1)));
+        menu.addMenuClickHandler(3, (o1, o2, stack, o4) -> {
             player.closeInventory();
-            player.sendMessage(ChatColors.color("&e&lEnter the new Legacy Id (ex. -1):"));
+            Utils.send(player, "editor.research.edit-legacy-id.prompt");
             ChatUtils.awaitInput(player, newLegacyId -> {
                 int legacyId;
                 try {
                     legacyId = Integer.parseInt(newLegacyId);
                 } catch (NumberFormatException e) {
-                    player.sendMessage(ChatColors.color("&cInvalid number: " + newLegacyId));
-                    openResearchEditor(player, researchId);
+                    Utils.send(player, "warnings.editor.invalid-number");
+                    menu.open(player);
                     return;
                 }
 
                 if (Slimefun.getRegistry().getResearches().stream().map(Research::getID).anyMatch(id -> id.equals(legacyId))
-                        || researches.getValues(true).values().contains(legacyId)) {
-                    player.sendMessage("A research already uses that legacyId: " + legacyId);
-                    openResearchEditor(player, researchId);
+                        || researches.getValues(true).containsValue(legacyId)) {
+                    Utils.send(player, "warnings.editor.existing-legacy-id");
+                    menu.open(player);
                     return;
                 }
                 researchConfig.set("legacy-id", legacyId);
-                openResearchEditor(player, researchId);
+                Utils.updateStack(stack, "editor.research.edit-legacy-id", legacyId);
             });
             return false;
         });
 
-        menu.addItem(5, new CustomItemStack(
-                Material.NAME_TAG,
-                "&eDisplay Name &7(String)",
-                "&7Current: &e" + researchConfig.getString("display-name", "Error: No Display Name Provided"),
-                "&eLeft-Click &7to edit"
-        ));
-        menu.addMenuClickHandler(5, (o1, o2, o3, o4) -> {
+        menu.addItem(5, Utils.translatedStack(Material.NAME_TAG, "editor.research.edit-name", researchConfig.getString("display-name", "Error: No Display Name Provided")));
+        menu.addMenuClickHandler(5, (o1, o2, stack, o4) -> {
             player.closeInventory();
-            player.sendMessage(ChatColors.color("&e&lEnter the new Display Name:"));
+            Utils.send(player, "editor.research.edit-name.prompt");
             ChatUtils.awaitInput(player, newName -> {
                 if (newName.isBlank()) {
-                    player.sendMessage(ChatColors.color("&cDisplay name cannot be blank"));
-                    openResearchEditor(player, researchId);
+                    Utils.send(player, "warnings.editor.blank-name");
+                    menu.open(player);
                     return;
                 }
                 researchConfig.set("display-name", newName);
-                openResearchEditor(player, researchId);
+                Utils.updateStack(stack, "editor.research.edit-name", newName);
             });
             return false;
         });
 
-        menu.addItem(7, new CustomItemStack(
-                Material.EXPERIENCE_BOTTLE,
-                "&eExperience Cost &7(Integer)",
-                "&7Current: &e" + researchConfig.getInt("exp-cost", 0),
-                "&eLeft-Click &7to edit"
-        ));
-        menu.addMenuClickHandler(7, (o1, o2, o3, o4) -> {
+        menu.addItem(7, Utils.translatedStack(Material.EXPERIENCE_BOTTLE, "editor.research.edit-exp-cost", researchConfig.getInt("exp-cost", 0)));
+        menu.addMenuClickHandler(7, (o1, o2, stack, o4) -> {
             player.closeInventory();
-            player.sendMessage(ChatColors.color("&e&lEnter the new Experience Cost (ex. 10):"));
+            Utils.send(player, "editor.research.edit-exp-cost.prompt");
             ChatUtils.awaitInput(player, newExpCost -> {
                 int expCost;
                 try {
                     expCost = Integer.parseInt(newExpCost);
                 } catch (NumberFormatException e) {
-                    player.sendMessage(ChatColors.color("&cInvalid number: " + newExpCost));
-                    openResearchEditor(player, researchId);
+                    Utils.send(player, "warnings.editor.invalid-number");
+                    menu.open(player);
                     return;
                 }
 
                 if (expCost < 0) {
-                    player.sendMessage(ChatColors.color("&cExperience cost cannot be negative: " + expCost));
-                    openResearchEditor(player, researchId);
+                    Utils.send(player, "warnings.editor.negative-exp-cost");
+                    menu.open(player);
                     return;
                 }
 
                 researchConfig.set("exp-cost", expCost);
-                openResearchEditor(player, researchId);
+                Utils.updateStack(stack, "editor.research.edit-exp-cost", expCost);
             });
             return false;
         });
 
-
-        List<String> idLore = new ArrayList<>();
-        idLore.add("&7Current:");
-        idLore.addAll(Utils.compressIds(researchConfig.getStringList("slimefun-items")));
-        idLore.add(" ");
-        idLore.add("&eLeft-Click &7to add a new id");
-        idLore.add("&eRight-Click &7to remove an id");
-        idLore.add("&eShift-Right-Click &7to clear all ids");
-
-        menu.addItem(13, new CustomItemStack(
-                Material.CHEST,
-                "&eSlimefun Item Ids &7(String List)",
-                idLore.toArray(new String[0])
-        ));
-        menu.addMenuClickHandler(13, ((o1, o2, o3, action) -> {
+        menu.addItem(9, Utils.translatedStack(RED_X, "editor.research.delete"));
+        menu.addMenuClickHandler(9, (o1, o2, o3, o4) -> {
             player.closeInventory();
-            if (action.isRightClicked() && action.isShiftClicked()) {
-                researchConfig.set("slimefun-items", new ArrayList<>());
-                openResearchEditor(player, researchId);
-                return false;
-            } else if (action.isRightClicked()) {
-                player.sendMessage(ChatColors.color("&e&lEnter the id to remove:"));
-                ChatUtils.awaitInput(player, id -> {
-                    List<String> itemIds = researchConfig.getStringList("slimefun-items");
-                    if (itemIds.remove(id)) {
+            TextComponent message = new TextComponent(Utils.translated("editor.research.delete.prompt"));
+            TextComponent confirm = new TextComponent(Utils.translated("editor.research.delete.confirm"));
+            confirm.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/mr editor confirm"));
+            confirm.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new TextComponent[] {
+                    new TextComponent(Utils.translated("editor.research.delete.confirm-hover"))
+            }));
+
+            TextComponent cancel = new TextComponent(Utils.translated("editor.research.delete.cancel"));
+            cancel.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/mr cancel"));
+            cancel.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new TextComponent[] {
+                    new TextComponent(Utils.translated("editor.research.delete.cancel-hover"))
+            }));
+
+            message.addExtra(confirm);
+            message.addExtra(cancel);
+            player.spigot().sendMessage(message);
+
+            CALLBACKS.put(player.getUniqueId(), result -> {
+                if (result.equals("confirm")) {
+                    researches.set(researchId, null);
+                    openMainMenu(player);
+                } else {
+                    menu.open(player);
+                }
+            });
+
+            return false;
+        });
+
+        menu.addItem(13, setupIdsStack(new ItemStack(Material.CHEST), researchConfig));
+        menu.addMenuClickHandler(13, new ChestMenu.AdvancedMenuClickHandler() {
+            @Override
+            public boolean onClick(Player o1, int o2, ItemStack stack, ClickAction action) {
+                player.closeInventory();
+                if (action.isRightClicked() && action.isShiftClicked()) {
+                    researchConfig.set("slimefun-items", new ArrayList<>());
+                    setupIdsStack(stack, researchConfig);
+                } else if (action.isRightClicked()) {
+                    Utils.send(player, "editor.research.edit-items.prompt-remove");
+                    ChatUtils.awaitInput(player, id -> {
+                        List<String> itemIds = researchConfig.getStringList("slimefun-items");
+                        if (itemIds.remove(id)) {
+                            researchConfig.set("slimefun-items", itemIds);
+                            setupIdsStack(stack, researchConfig);
+                        } else {
+                            Utils.send(player, "warnings.editor.item-id-not-found");
+                        }
+                    });
+                } else {
+                    Utils.send(player, "editor.research.edit-items.prompt-add");
+                    ChatUtils.awaitInput(player, id -> {
+                        if (SlimefunItem.getById(id) == null) {
+                            Utils.send(player, "warnings.editor.invalid-item-id", id);
+                        }
+
+                        List<String> itemIds = researchConfig.getStringList("slimefun-items");
+                        if (itemIds.contains(id)) {
+                            Utils.send(player, "warnings.editor.duplicate-item-id", id);
+                            return;
+                        }
+
+                        itemIds.add(id);
                         researchConfig.set("slimefun-items", itemIds);
-                    }
-                    openResearchEditor(player, researchId);
-                });
-                return false;
-            } else {
-                player.sendMessage(ChatColors.color("&e&lEnter the new id:"));
-                ChatUtils.awaitInput(player, id -> {
-                    List<String> itemIds = researchConfig.getStringList("slimefun-items");
-                    itemIds.add(id);
-                    researchConfig.set("slimefun-items", itemIds);
-                    openResearchEditor(player, researchId);
-                });
+                        setupIdsStack(stack, researchConfig);
+                    });
+                }
                 return false;
             }
-        }));
 
-        menu.addItem(17, new CustomItemStack(
-                LIME_CHECKMARK,
-                "&aDone",
-                "&aLeft-Click &7to return to the main page"
-        ));
+            @Override
+            public boolean onClick(InventoryClickEvent event, Player o2, int o3, ItemStack cursor, ClickAction action) {
+                if (cursor != null && !cursor.getType().isAir()) {
+                    Optional<String> id = Slimefun.getItemDataService().getItemData(cursor);
+                    if (id.isEmpty()) {
+                        Utils.send(player, "warnings.editor.not-slimefun-item");
+                        return false;
+                    }
+
+                    List<String> itemIds = researchConfig.getStringList("slimefun-items");
+                    if (itemIds.contains(id.get())) {
+                        Utils.send(player, "warnings.editor.duplicate-item-id", id.get());
+                        return false;
+                    }
+
+                    itemIds.add(id.get());
+                    researchConfig.set("slimefun-items", itemIds);
+                    setupIdsStack(event.getCurrentItem(), researchConfig);
+                    return false;
+                }
+                return onClick(o2, o3, event.getCurrentItem(), action);
+            }
+        });
+
+        menu.addItem(17,Utils.translatedStack(LIME_CHECKMARK, "editor.research.done"));
         menu.addMenuClickHandler(17, (o1, o2, o3, o4) -> {
             openMainMenu(player);
             return false;
         });
 
+        menu.setEmptySlotsClickable(false);
+        menu.setPlayerInventoryClickable(true);
         menu.open(player);
+    }
+
+    public static ItemStack setupIdsStack(ItemStack itemStack, ConfigurationSection researchConfig) {
+        if (itemStack == null) {
+            return null;
+        }
+
+        ItemMeta meta = itemStack.getItemMeta();
+        if (meta != null) {
+            String name = Utils.translated("editor.research.edit-items.name");
+            List<String> idLore = Utils.translatedList("editor.research.edit-items.lore");
+            int index = idLore.indexOf("{current}");
+            idLore.remove(index);
+            idLore.addAll(index, Utils.compressIds(researchConfig.getStringList("slimefun-items")));
+            meta.setDisplayName(name);
+            meta.setLore(idLore);
+            itemStack.setItemMeta(meta);
+        }
+
+        return itemStack;
+    }
+
+    public static void handleCallback(Player player, String result) {
+        if (CALLBACKS.containsKey(player.getUniqueId())) {
+            CALLBACKS.remove(player.getUniqueId()).accept(result);
+        }
     }
 }

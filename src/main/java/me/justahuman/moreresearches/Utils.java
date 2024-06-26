@@ -3,11 +3,22 @@ package me.justahuman.moreresearches;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
 import io.github.thebusybiscuit.slimefun4.api.researches.Research;
 import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
+import io.github.thebusybiscuit.slimefun4.libraries.dough.common.ChatColors;
+import io.github.thebusybiscuit.slimefun4.libraries.dough.items.CustomItemStack;
+import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -26,6 +37,8 @@ public class Utils {
             throw new RuntimeException(e);
         }
     }
+
+    private static YamlConfiguration langFile = null;
 
     public static void loadResearches() {
         FileConfiguration config = MoreResearches.getInstance().getConfig();
@@ -153,6 +166,71 @@ public class Utils {
         }
 
         return compressedWords;
+    }
+
+    public static void unchacheLangFile() {
+        langFile = null;
+    }
+
+    public static void cacheLangFile() {
+        if (langFile == null) {
+            MoreResearches researches = MoreResearches.getInstance();
+            FileConfiguration config = researches.getConfig();
+            String language = config.getString("lang", "en_us");
+            InputStream lang = researches.getResource("lang/" + language + ".yml");
+            if (lang == null) {
+                lang = researches.getResource("lang/en_us.yml");
+            }
+
+            if (lang == null) {
+                return;
+            }
+            langFile = YamlConfiguration.loadConfiguration(new BufferedReader(new InputStreamReader(lang, StandardCharsets.UTF_8)));
+        }
+    }
+
+    public static void send(Player player, String key, Object... args) {
+        player.sendMessage(translated(key, args));
+    }
+
+    public static String translated(String key, Object... args) {
+        cacheLangFile();
+        if (langFile == null) {
+            return "Error: No Language File Found!";
+        }
+        return ChatColors.color(langFile.getString(key, "Error: No Translation for \"" + key + "\" Found!").formatted(args));
+    }
+
+    public static List<String> translatedList(String key, Object... args) {
+        cacheLangFile();
+        if (langFile == null) {
+            return List.of("Error: No Language File Found!");
+        }
+        return new ArrayList<>(langFile.getStringList(key).stream().map(s -> ChatColors.color(s.formatted(args))).toList());
+    }
+
+    public static ItemStack translatedStack(Material base, String key, Object... args) {
+        String name = translated(key + ".name", args);
+        List<String> lore = translatedList(key + ".lore", args);
+        return new CustomItemStack(base, name, lore);
+    }
+
+    public static ItemStack translatedStack(ItemStack base, String key, Object... args) {
+        String name = translated(key + ".name", args);
+        List<String> lore = translatedList(key + ".lore", args);
+        return new CustomItemStack(base, name, lore.toArray(new String[0]));
+    }
+
+    public static ItemStack updateStack(ItemStack stack, String key, Object... args) {
+        String name = translated(key + ".name", args);
+        List<String> lore = translatedList(key + ".lore", args);
+        ItemMeta meta = stack.getItemMeta();
+        if (meta != null) {
+            meta.setDisplayName(name);
+            meta.setLore(lore);
+            stack.setItemMeta(meta);
+        }
+        return stack;
     }
 
     public static boolean isCustomResearch(Research research) {
