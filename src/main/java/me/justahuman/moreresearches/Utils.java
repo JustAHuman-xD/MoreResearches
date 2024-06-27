@@ -5,6 +5,7 @@ import io.github.thebusybiscuit.slimefun4.api.researches.Research;
 import io.github.thebusybiscuit.slimefun4.implementation.Slimefun;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.common.ChatColors;
 import io.github.thebusybiscuit.slimefun4.libraries.dough.items.CustomItemStack;
+import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
@@ -154,14 +155,14 @@ public class Utils {
         int targetGroupSize = (int) Math.ceil((double) totalWords / numGroups);
 
         List<String> compressedWords = new ArrayList<>();
-        StringBuilder currentGroup = new StringBuilder("&e");
+        StringBuilder currentGroup = new StringBuilder(ChatColor.YELLOW.toString());
 
         for (int i = 0; i < totalWords; i++) {
             currentGroup.append(words.get(i)).append(", ");
 
             if ((i + 1) % targetGroupSize == 0 || i == totalWords - 1) {
                 compressedWords.add(currentGroup.toString().trim());
-                currentGroup = new StringBuilder("&e");
+                currentGroup = new StringBuilder(ChatColor.YELLOW.toString());
             }
         }
 
