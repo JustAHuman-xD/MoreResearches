@@ -33,7 +33,7 @@ public class MoreResearches extends JavaPlugin implements SlimefunAddon {
         CommandCompletions<BukkitCommandCompletionContext> completions = commandManager.getCommandCompletions();
         completions.registerAsyncCompletion("slimefun_items", c -> Slimefun.getRegistry().getEnabledSlimefunItems()
                 .stream().map(SlimefunItem::getId).collect(Collectors.toSet()));
-        completions.registerStaticCompletion("languages", List.of("en_us"));
+        completions.registerStaticCompletion("languages", List.of("en_us", "zh_cn"));
 
         commandManager.registerCommand(new ResearchCommands());
 
