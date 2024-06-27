@@ -1,0 +1,101 @@
+startup:
+  load: "加载研究中..."
+  loaded: "已加载 %s 个自定义研究，包含 %s 个物品"
+
+command:
+  set-lang: "已设置语言为 %s"
+  reload: "正在重载更多研究的配置文件..."
+
+editor:
+  main-page:
+    title: "更多研究编辑器"
+    edit-research: "&f左键点击&7以编辑"
+    discard-changes:
+      name: "&c放弃更改"
+      lore:
+        - "&c左键点击&7以放弃所有更改"
+        - "&7这会重新加载配置文件..."
+    new-research:
+      name: "&f新增研究"
+      lore:
+        - "&f左键点击&7以创建一个研究"
+    save-changes:
+      name: "&a保存更改"
+      lore:
+        - "&a左键点击&7将更改内容"
+        - "&7保存至配置文件并重载"
+  research:
+    title: "研究编辑器"
+    edit-id:
+      name: "&e研究 ID&7（字符串）"
+      lore:
+        - "&7当前为：&e%s"
+        - "&7用于区分不同研究的唯一标识符"
+        - "&7只能使用小写字母、数字与下划线"
+        - "&e左键点击&7以编辑"
+      prompt: "&e&l输入新的研究 ID（例如 test_research）："
+    edit-legacy-id:
+      name: "&e旧版研究 ID&7（数字）"
+      lore:
+        - "&7当前为：&e%s"
+        - "&7用于区分不同研究的唯一数字标识符"
+        - "&7建议使用负数作为研究 ID"
+        - "&e左键点击&7以编辑"
+      prompt: "&e&l输入新的旧版研究 ID（例如 -1）："
+    edit-name:
+      name: "&e展示名称&7（字符串）"
+      lore:
+        - "&7当前为：&e%s"
+        - "&7解锁时展示的研究名称"
+        - "&e左键点击&7以编辑"
+      prompt: "&e&l输入新的展示名称（例如 测试研究）："
+    edit-exp-cost:
+      name: "&e经验花费&7（数字）"
+      lore:
+        - "&7当前为：&e%s"
+        - "&7解锁该研究所需的经验花费"
+        - "&e左键点击&7以编辑"
+      prompt: "&e&l输入新的经验花费（例如 114）："
+    delete:
+      name: "&c删除研究"
+      lore:
+        - "&c左键点击&7以删除该研究"
+      prompt: "你确定要删除该研究吗？"
+      confirm: "&a[✔]"
+      confirm-hover: "&a点击确认"
+      cancel: "&c[✘]"
+      cancel-hover: "&c点击取消"
+    edit-items:
+      name: "&eSlimefun 物品 ID 列表 &7（字符串列表）"
+      lore:
+        - "&7当前为："
+        - "{current}"
+        - " "
+        - "&e左键点击&7以添加新的 ID"
+        - "&7手持&e粘液物品&7左键点击"
+        - "&e右键点击&7以移除当前 ID"
+        - "&eShift+右键点击&7以移除所有 ID"
+      prompt-remove: "&e&l输入需要移除的ID："
+      prompt-add: "&e&l输入新的 ID："
+    done:
+      name: "&a完成"
+      lore:
+        - "&a左键点击&7以返回主菜单"
+
+warnings:
+  command:
+    invalid-lang: "无效的语言：%s"
+  research:
+    no-body: "无效的研究（没有内容）：%s"
+  editor:
+    existing-id: "&c该 ID 已被其他研究使用"
+    blank-id: "&c研究 ID 不能为空"
+    invalid-id: "&c无效的研究 ID：%s"
+    existing-legacy-id: "&c该数字 ID 已被其他研究使用"
+    invalid-number: "&c无效的数字：%s"
+    blank-name: "&c展示名称不能为空"
+    negative-exp-cost: "&c经验花费不能为负数"
+    item-id-not-found: "&c物品 ID 不存在"
+    invalid-item-id: "&c无效的粘液物品 ID：%s"
+    duplicate-item-id: "&c该物品已存在于该研究"
+    not-slimefun-item: "&c不是一个粘液物品：%s"
