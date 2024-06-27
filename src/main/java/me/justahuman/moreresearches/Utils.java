@@ -155,14 +155,17 @@ public class Utils {
         int targetGroupSize = (int) Math.ceil((double) totalWords / numGroups);
 
         List<String> compressedWords = new ArrayList<>();
-        StringBuilder currentGroup = new StringBuilder(ChatColor.YELLOW.toString());
+        StringBuilder currentGroup = new StringBuilder();
 
         for (int i = 0; i < totalWords; i++) {
-            currentGroup.append(words.get(i)).append(", ");
+            if (!currentGroup.isEmpty()) {
+                currentGroup.append(", ");
+            }
 
+            currentGroup.append(words.get(i));
             if ((i + 1) % targetGroupSize == 0 || i == totalWords - 1) {
-                compressedWords.add(currentGroup.toString().trim());
-                currentGroup = new StringBuilder(ChatColor.YELLOW.toString());
+                compressedWords.add(ChatColor.YELLOW + currentGroup.toString().trim());
+                currentGroup = new StringBuilder();
             }
         }
 
