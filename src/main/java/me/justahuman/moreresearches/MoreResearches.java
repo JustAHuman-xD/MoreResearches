@@ -37,7 +37,7 @@ public class MoreResearches extends JavaPlugin implements SlimefunAddon {
 
         commandManager.registerCommand(new ResearchCommands());
 
-        if (getConfig().getBoolean("options.auto-update") && getDescription().getVersion().startsWith("Dev - ")) {
+        if (getConfig().getBoolean("auto-update", true) && getDescription().getVersion().startsWith("Dev - ")) {
             BlobBuildUpdater updater = new BlobBuildUpdater(this, this.getFile(), "MoreResearches", "Dev");
             updater.start();
         }
