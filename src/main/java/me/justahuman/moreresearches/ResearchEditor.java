@@ -171,7 +171,7 @@ public class ResearchEditor {
                     menu.open(player);
                     return;
                 } else if (!newId.matches("^[a-z0-9_]+$")) {
-                    Utils.send(player, "warnings.editor.invalid-id");
+                    Utils.send(player, "warnings.editor.invalid-id", newId);
                     menu.open(player);
                     return;
                 }
@@ -191,7 +191,7 @@ public class ResearchEditor {
                 try {
                     legacyId = Integer.parseInt(newLegacyId);
                 } catch (NumberFormatException e) {
-                    Utils.send(player, "warnings.editor.invalid-number");
+                    Utils.send(player, "warnings.editor.invalid-number", newLegacyId);
                     menu.open(player);
                     return;
                 }
@@ -204,6 +204,7 @@ public class ResearchEditor {
                 }
                 researchConfig.set("legacy-id", legacyId);
                 Utils.updateStack(stack, "editor.research.edit-legacy-id", legacyId);
+                menu.open(player);
             });
             return false;
         });
@@ -220,6 +221,7 @@ public class ResearchEditor {
                 }
                 researchConfig.set("display-name", newName);
                 Utils.updateStack(stack, "editor.research.edit-name", newName);
+                menu.open(player);
             });
             return false;
         });
@@ -233,7 +235,7 @@ public class ResearchEditor {
                 try {
                     expCost = Integer.parseInt(newExpCost);
                 } catch (NumberFormatException e) {
-                    Utils.send(player, "warnings.editor.invalid-number");
+                    Utils.send(player, "warnings.editor.invalid-number", newExpCost);
                     menu.open(player);
                     return;
                 }
@@ -246,6 +248,7 @@ public class ResearchEditor {
 
                 researchConfig.set("exp-cost", expCost);
                 Utils.updateStack(stack, "editor.research.edit-exp-cost", expCost);
+                menu.open(player);
             });
             return false;
         });
@@ -286,11 +289,11 @@ public class ResearchEditor {
         menu.addMenuClickHandler(13, new ChestMenu.AdvancedMenuClickHandler() {
             @Override
             public boolean onClick(Player o1, int o2, ItemStack stack, ClickAction action) {
-                player.closeInventory();
                 if (action.isRightClicked() && action.isShiftClicked()) {
                     researchConfig.set("slimefun-items", new ArrayList<>());
                     setupIdsStack(stack, researchConfig);
                 } else if (action.isRightClicked()) {
+                    player.closeInventory();
                     Utils.send(player, "editor.research.edit-items.prompt-remove");
                     ChatUtils.awaitInput(player, id -> {
                         List<String> itemIds = researchConfig.getStringList("slimefun-items");
@@ -300,23 +303,29 @@ public class ResearchEditor {
                         } else {
                             Utils.send(player, "warnings.editor.item-id-not-found");
                         }
+                        menu.open(player);
                     });
                 } else {
+                    player.closeInventory();
                     Utils.send(player, "editor.research.edit-items.prompt-add");
                     ChatUtils.awaitInput(player, id -> {
                         if (SlimefunItem.getById(id) == null) {
                             Utils.send(player, "warnings.editor.invalid-item-id", id);
+                            menu.open(player);
+                            return;
                         }
 
                         List<String> itemIds = researchConfig.getStringList("slimefun-items");
                         if (itemIds.contains(id)) {
                             Utils.send(player, "warnings.editor.duplicate-item-id", id);
+                            menu.open(player);
                             return;
                         }
 
                         itemIds.add(id);
                         researchConfig.set("slimefun-items", itemIds);
                         setupIdsStack(stack, researchConfig);
+                        menu.open(player);
                     });
                 }
                 return false;
