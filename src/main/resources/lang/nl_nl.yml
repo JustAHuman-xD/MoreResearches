@@ -1,0 +1,101 @@
+startup:
+  load: "Bezig met laden van onderzoeken..."
+  loaded: "Er zijn %s aangepaste onderzoeken geladen voor %s items"
+
+command:
+  set-lang: "Taal instellen op %s"
+  reload: "Bezig met herladen van MoreResearches-configuratie!"
+
+editor:
+  main-page:
+    title: "MoreResearches Editor"
+    edit-research: "&fLinksklik &7om te bewerken"
+    discard-changes:
+      name: "&cWijzigingen negeren"
+      lore:
+        - "&cLinksklik &7om alle wijzigingen te negeren"
+        - "&7Dit laadt effectief de configuratie opnieuw"
+    new-research:
+      name: "&fNieuw Onderzoek"
+      lore:
+        - "&fLinksklik &7om een nieuw onderzoek te maken"
+    save-changes:
+      name: "&aWijzigingen opslaan"
+      lore:
+        - "&aLinksklik &7om alle wijzigingen op te slaan in het"
+        - "&7configuratiebestand en ze in-game te laden."
+  research:
+    title: "Onderzoeksbewerker"
+    edit-id:
+      name: "&eOnderzoek-ID &7(tekenreeks)"
+      lore:
+        - "&7Huidig: &e%s"
+        - "&7De unieke identificatie voor dit onderzoek"
+        - "&7Alleen alfanumerieke tekens en underscores zijn toegestaan"
+        - "&eLinksklik &7om te bewerken"
+      prompt: "&e&lVoer het nieuwe onderzoek-ID in (bijv. test_onderzoek):"
+    edit-legacy-id:
+      name: "&eLegacy-ID &7(geheel getal)"
+      lore:
+        - "&7Huidig: &e%s"
+        - "&7Het unieke numerieke identificatienummer voor dit onderzoek"
+        - "&7Negatieve getallen worden aanbevolen voor aangepaste onderzoeken"
+        - "&eLinksklik &7om te bewerken"
+      prompt: "&e&lVoer het nieuwe Legacy-ID in (bijv. -1):"
+    edit-name:
+      name: "&eWeergavenaam &7(tekenreeks)"
+      lore:
+        - "&7Huidig: &e%s"
+        - "&7De weergavenaam van het onderzoek"
+        - "&eLinksklik &7om te bewerken"
+      prompt: "&e&lVoer de nieuwe weergavenaam in (bijv. Test Onderzoek):"
+    edit-exp-cost:
+      name: "&eErvaringskosten &7(geheel getal)"
+      lore:
+        - "&7Huidig: &e%s"
+        - "&7De ervaringskosten om dit onderzoek te ontgrendelen"
+        - "&eLinksklik &7om te bewerken"
+      prompt: "&e&lVoer de nieuwe ervaringskosten in (bijv. 10):"
+    delete:
+      name: "&cOnderzoek verwijderen"
+      lore:
+        - "&cLinksklik &7om dit onderzoek te verwijderen"
+      prompt: "Weet je zeker dat je dit onderzoek wilt verwijderen? "
+      confirm: "&a[✔]"
+      confirm-hover: "&aKlik om te bevestigen"
+      cancel: "&c[✘]"
+      cancel-hover: "&cKlik om te annuleren"
+    edit-items:
+      name: "&eSlimefun-item-ID's &7(lijst van tekenreeksen)"
+      lore:
+        - "&7Huidig: "
+        - "{Huidig}"
+        - " "
+        - "&eLinksklik &7om een nieuw ID toe te voegen"
+        - "&eLinksklik &7met een &eSlimefun-item &7om het toe te voegen/verwijderen"
+        - "&eRechtsklik &7om een ID te verwijderen"
+        - "&eShift-rechtsklik &7om alle ID's te wissen"
+      prompt-remove: "&e&lVoer het ID in dat je wilt verwijderen:"
+      prompt-add: "&e&lVoer het nieuwe ID in:"
+    done:
+      name: "&aKlaar"
+      lore:
+        - "&aLinksklik &7om terug te keren naar de hoofdpagina"
+
+warnings:
+  command:
+    invalid-lang: "Ongeldige taal: %s"
+  research:
+    no-body: "Ongeldig onderzoek, geen inhoud: %s"
+  editor:
+    existing-id: "&cEen onderzoek gebruikt al dat ID"
+    blank-id: "&cOnderzoek-ID mag niet leeg zijn"
+    invalid-id: "&cOngeldig onderzoek-ID: %s"
+    existing-legacy-id: "&cEen onderzoek gebruikt al dat legacy-ID"
+    invalid-number: "&cOngeldig getal: %s"
+    blank-name: "&cWeergavenaam mag niet leeg zijn"
+    negative-exp-cost: "&cErvaringskosten kunnen niet negatief zijn"
+    item-id-not-found: "&cID niet gevonden in onderzoek"
+    invalid-item-id: "&cOngeldig Slimefun-item-ID: %s"
+    duplicate-item-id: "&cID bestaat al in onderzoek"
+    not-slimefun-item: "&cItem is geen Slimefun-item: %s"
